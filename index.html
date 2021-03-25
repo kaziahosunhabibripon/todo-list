@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>To Do List</title>
+    <style>
+        .container {
+            background-color: aliceblue;
+        }
+        .col-md-8 {
+            margin: 10px auto;
+
+        }
+        .form-part {
+            text-align: left !important;
+            padding: 20px;
+        }
+        .form-part input,
+        button {
+            border-radius: 10px;
+        }
+
+        input {
+            width: 27%;
+            padding: 10px;
+        }
+
+        button {
+            width: 17%;
+            height: 40px;
+            align-items: center;
+            padding: 5px;
+            justify-items: center;
+            background-color: hsla(351, 38%, 52%, 0.747);
+            border: none;
+            outline: none;
+        }
+        .todopart {
+            border: 1px solid grey;
+            border-radius: 10px;
+            margin: 5px auto;
+        }
+        .todopart p {
+            text-align: left !important;
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-2 my-2 text-center">
+        <h1>My To Do List App for mongo database...</h1>
+        <div class="row">
+            <div class="col-md-8">
+                <form action='/addWork' method="post" class="form-part">
+                    <input type="text" placeholder="Work list" name="WorkName">
+
+                    <input type="text" placeholder="Time to read" name="Time">
+
+                    <input type="text" placeholder="Number of work" name="Number">
+
+                    <button type="submit"> Add To Work</button>
+                </form>
+            </div>
+            <div class="col-md-8 todopart" id="works">
+                
+            </div>
+            <div id="update" class="col-md-8">
+
+            </div>
+        </div>
+    </div>
+    <script>
+        function loadAllWorks() {
+            fetch('/works')
+                .then(res => res.json())
+                .then(works => {
+                    const container = document.getElementById('works');
+                    container.innerHTML = '';
+                    works.forEach(work => {
+                        const item = document.createElement('p');
+                        item.innerHTML = `
+                ${work.WorkName}
+                &nbsp; ${work.Time} <span>Hours</span>
+                <span>Work Load: ${work.Number}</span> 
+                <button onclick="loadWorks('${work._id}')"> Update</button>
+                <button onclick="deleteWork(event,'${work._id}')"> Delete</button>
+                `;
+                    container.appendChild(item);
+                })
+            })
+        }
+        loadAllWorks();
+
+        function loadWorks(id){
+            fetch(`/works/${id}`)
+            .then(res=>res.json())
+            .then(data=>{
+                const update = document.getElementById('update');
+                update.innerHTML = `
+                <h3> Updating: ${data._id}</h3>
+               Work Time: <input type="text" value="${data.Time}" id="time"/>
+               </br>
+               Number of Work: <input type="text" value="${data.Number}"  id="number"/>
+               <br />
+               <button type="text" onclick="updateWork('${data._id}')">Update</button>         
+                `;
+            })
+        }
+
+        function updateWork(id){
+            const time = document.getElementById('time').value;
+            const number = document.getElementById('number').value;
+            const work= {id, time, number}; 
+            fetch(`/update/${id}`,{
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(work)
+            })
+            .then(res=>res.json())
+            .then(result=>{
+                if(result){
+                    loadAllWorks();
+                    const update = document.getElementById('update').innerHTML='';
+                }    
+            })
+        }
+
+        function deleteWork(event, id){
+            fetch(`/delete/${id}`,{
+                method: 'DELETE'      
+            })
+            .then(res=> res.json())
+            .then(result=>{
+                if(result){
+                    event.target.parentNode.style.display = "none";
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>
